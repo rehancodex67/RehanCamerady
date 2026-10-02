@@ -1,0 +1,4 @@
+python-telegram-bot[job-queue]>=21.7
+flask>=3.0.0
+requests>=2.31.0
+pg8000>=1.31.5
