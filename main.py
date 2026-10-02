@@ -3879,10 +3879,12 @@ def main():
     import signal
     signal.signal(signal.SIGINT, lambda s, f: (_cleanup(), _release_pid_lock(), os._exit(0)))
     signal.signal(signal.SIGTERM, lambda s, f: (_cleanup(), _release_pid_lock(), os._exit(0)))
-    if not _acquire_pid_lock():
+    hosting = _is_hosting()
+    if hosting:
+        log("hosting — pid lock skipped")
+    elif not _acquire_pid_lock():
         print("[RCX] EXITING — another instance already running")
         return
-    hosting = _is_hosting()
     if hosting:
         log("mode: HOSTING (env vars)")
     else:
@@ -3921,6 +3923,12 @@ def main():
     threading.Thread(target=tunnel_watchdog, daemon=True).start()
     threading.Thread(target=access_expiry_watchdog, daemon=True).start()
     threading.Thread(target=self_ping_worker, daemon=True).start()
+
+    if os.getenv("FLASK_ONLY", "0") == "1":
+        log("FLASK_ONLY=1 — Flask only, no bot polling")
+        while True:
+            time.sleep(3600)
+
     app = (Application.builder()
             .token(BOT_TOKEN)
             .concurrent_updates(True)
