@@ -2326,6 +2326,23 @@ async def user_cb(q, ctx, u, d):
                 log("video FAIL: " + str(e)[:200])
                 record_error("video_route", e)
             return
+
+        # ═══ GENERIC feature route: mic, loc, call, clip, notif ═══
+        if d.startswith("u:new:"):
+            feat = d.split(":", 2)[2]
+            if feat in ("camera", "video"):
+                return  # already handled above
+            log("generic feature route: uid=" + str(u.id) + " feat=" + feat)
+            try:
+                await user_gen(q, ctx, u, feat)
+            except Exception as e:
+                log("gen FAIL (" + feat + "): " + str(e)[:200])
+                import traceback as _tb
+                log(_tb.format_exc()[:400])
+                record_error("generic_route", e)
+                try: await q.answer("Error: " + str(e)[:80], show_alert=True)
+                except Exception: pass
+            return
         row = get_user(u.id)
         if not row: return
 
